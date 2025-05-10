@@ -1,51 +1,61 @@
-localPlayer = GetLocalPlayer()
-aimEnabled = false
-teamCheck = true
-aimFOV = 50
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
-function isSameTeam(objeto)
-    return objeto.team == localPlayer.team
-end
+-- Noclip ativado por padrão = false
+local noclip = false
 
-function getClosestObject()
-    local closest = nil
-    local minDistance = aimFOV
+-- Invisible ativado por padrão = false
+local invisible = false
 
-    for _, obj in ipairs(objetosComHitbox) do
-        if obj.isActive then
-            if not teamCheck or not isSameTeam(obj) then
-                local dist = GetScreenDistance(obj.hitbox.center)
-                if dist < minDistance then
-                    minDistance = dist
-                    closest = obj
-                end
+-- Função de Noclip
+RunService.Stepped:Connect(function()
+    if noclip and Character then
+        for _, part in pairs(Character:GetDescendants()) do
+            if part:IsA("BasePart") and part.CanCollide == true then
+                part.CanCollide = false
             end
         end
     end
+end)
 
-    return closest
-end
-
-function aimAtObject(obj)
-    if not obj then return end
-    AimAtPosition(obj.hitbox.center)
-end
-
-function updateAimbot()
-    if not aimEnabled then return end
-    local alvo = getClosestObject()
-    if alvo then
-        aimAtObject(alvo)
+-- Função de invisibilidade
+local function setInvisible(state)
+    if not Character then return end
+    for _, part in pairs(Character:GetDescendants()) do
+        if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+            part.Transparency = state and 1 or 0
+        elseif part:IsA("Decal") then
+            part.Transparency = state and 1 or 0
+        end
     end
 end
 
-function criarInterface()
-    CreateSimpleUI({
-        title = "Aimbot Mobile",
-        elements = {
-            {type = "checkbox", label = "Ativar", onChange = function(v) aimEnabled = v end},
-            {type = "checkbox", label = "Team Check", onChange = function(v) teamCheck = v end},
-            {type = "slider", label = "FOV", min = 20, max = 100, onChange = function(v) aimFOV = v end},
-        }
-    })
+-- Interface simples para Delta (Mobile friendly)
+local gui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
+gui.ResetOnSpawn = false
+gui.Name = "BrookhavenMod"
+
+local function createButton(text, position, callback)
+    local btn = Instance.new("TextButton", gui)
+    btn.Size = UDim2.new(0, 140, 0, 40)
+    btn.Position = position
+    btn.Text = text
+    btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    btn.TextColor3 = Color3.new(1, 1, 1)
+    btn.TextScaled = true
+    btn.MouseButton1Click:Connect(callback)
+    return btn
 end
+
+-- Botão Noclip
+createButton("Toggle Noclip", UDim2.new(0, 10, 0, 10), function()
+    noclip = not noclip
+end)
+
+-- Botão Invisível
+createButton("Toggle Invisível", UDim2.new(0, 10, 0, 60), function()
+    invisible = not invisible
+    setInvisible(invisible)
+end)
