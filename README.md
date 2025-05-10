@@ -1,61 +1,38 @@
+local Sounds = {
+    Screamer = "rbxassetid://9121609859", -- grito de terror
+    Jumpscare = "rbxassetid://8934125122", -- susto forte
+    Breathing = "rbxassetid://183763512", -- respiração assustadora
+    Static = "rbxassetid://9121628917", -- estática de rádio tensa
+    DeepBoom = "rbxassetid://138186576", -- batida grave de tensão
+}
+
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
-local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 
--- Noclip ativado por padrão = false
-local noclip = false
-
--- Invisible ativado por padrão = false
-local invisible = false
-
--- Função de Noclip
-RunService.Stepped:Connect(function()
-    if noclip and Character then
-        for _, part in pairs(Character:GetDescendants()) do
-            if part:IsA("BasePart") and part.CanCollide == true then
-                part.CanCollide = false
-            end
-        end
-    end
-end)
-
--- Função de invisibilidade
-local function setInvisible(state)
-    if not Character then return end
-    for _, part in pairs(Character:GetDescendants()) do
-        if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
-            part.Transparency = state and 1 or 0
-        elseif part:IsA("Decal") then
-            part.Transparency = state and 1 or 0
-        end
-    end
-end
-
--- Interface simples para Delta (Mobile friendly)
+-- Interface simples (Delta mobile)
 local gui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
+gui.Name = "SoundTerrorUI"
 gui.ResetOnSpawn = false
-gui.Name = "BrookhavenMod"
 
-local function createButton(text, position, callback)
+local yOffset = 10
+for name, soundId in pairs(Sounds) do
     local btn = Instance.new("TextButton", gui)
-    btn.Size = UDim2.new(0, 140, 0, 40)
-    btn.Position = position
-    btn.Text = text
-    btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    btn.Size = UDim2.new(0, 160, 0, 40)
+    btn.Position = UDim2.new(0, 10, 0, yOffset)
+    btn.Text = "Play: " .. name
+    btn.BackgroundColor3 = Color3.fromRGB(40, 0, 0)
     btn.TextColor3 = Color3.new(1, 1, 1)
     btn.TextScaled = true
-    btn.MouseButton1Click:Connect(callback)
-    return btn
+
+    btn.MouseButton1Click:Connect(function()
+        local sound = Instance.new("Sound")
+        sound.SoundId = soundId
+        sound.Volume = 5
+        sound.Looped = false
+        sound.Parent = workspace
+        sound:Play()
+        game:GetService("Debris"):AddItem(sound, 10) -- remove após 10s
+    end)
+
+    yOffset = yOffset + 50
 end
-
--- Botão Noclip
-createButton("Toggle Noclip", UDim2.new(0, 10, 0, 10), function()
-    noclip = not noclip
-end)
-
--- Botão Invisível
-createButton("Toggle Invisível", UDim2.new(0, 10, 0, 60), function()
-    invisible = not invisible
-    setInvisible(invisible)
-end)
